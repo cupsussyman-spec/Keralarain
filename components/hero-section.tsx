@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useMemo } from "react"
+import { relativeUpdated } from "@/lib/weather-transforms"
 
 type WeatherKind = 'sunny' | 'cloudy' | 'light' | 'moderate' | 'heavy' | 'very-heavy' | 'storm'
 
@@ -149,12 +150,22 @@ function DialCanvas({ pct, kind }: { pct: number; kind: WeatherKind }) {
   return <canvas ref={ref} className="dial-canvas" />
 }
 
+export interface HeroLiveData {
+  tempC?: number
+  feelsLikeC?: number
+  humidity?: number
+  windKph?: number
+  chanceOfRain?: number
+  lastUpdated?: string
+}
+
 export interface HeroSectionProps {
   mm: number
   districtName: string
+  live?: HeroLiveData
 }
 
-export function HeroSection({ mm, districtName }: HeroSectionProps) {
+export function HeroSection({ mm, districtName, live }: HeroSectionProps) {
   const kind = autoKind(mm)
   const cat = CAT[kind]
   const sev = SEV_COLOR[cat.sev]
@@ -188,7 +199,11 @@ export function HeroSection({ mm, districtName }: HeroSectionProps) {
             <span className="chip" style={{ background: sev.soft, color: sev.color }}>
               <span className="chip-dot" />{cat.chip ?? cat.label}
             </span>
-            <span className="dial-time mono">UPDATED 2 MIN AGO</span>
+            <span className="dial-time mono">
+              {live?.lastUpdated
+                ? `UPDATED ${relativeUpdated(live.lastUpdated).toUpperCase()}`
+                : 'UPDATED 2 MIN AGO'}
+            </span>
           </div>
           <div style={{ position: 'relative' }}>
             <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(44px, 6vw, 72px)', lineHeight: 1 }}>
@@ -214,9 +229,26 @@ export function HeroSection({ mm, districtName }: HeroSectionProps) {
       </div>
 
       <div className="stats">
-        <div className="stat"><div className="stat-key">Humidity</div><div className="stat-val">92<span className="u">%</span></div><div className="stat-trend">↑ 4% vs yesterday</div></div>
-        <div className="stat"><div className="stat-key">Wind</div><div className="stat-val">22<span className="u">km/h</span></div><div className="stat-trend">WSW · gusts 38</div></div>
-        <div className="stat"><div className="stat-key">Chance of rain</div><div className="stat-val">86<span className="u">%</span></div><div className="stat-trend">next 6 hours</div></div>
+        <div className="stat">
+          <div className="stat-key">Humidity</div>
+          <div className="stat-val">{live?.humidity ?? 92}<span className="u">%</span></div>
+          <div className="stat-trend">{live ? 'current' : '↑ 4% vs yesterday'}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-key">Temperature</div>
+          <div className="stat-val">{live?.tempC !== undefined ? Math.round(live.tempC) : '—'}<span className="u">°C</span></div>
+          <div className="stat-trend">{live?.feelsLikeC !== undefined ? `feels ${Math.round(live.feelsLikeC)}°` : 'feels like —'}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-key">Wind</div>
+          <div className="stat-val">{live?.windKph !== undefined ? Math.round(live.windKph) : 22}<span className="u">km/h</span></div>
+          <div className="stat-trend">{live ? 'current speed' : 'WSW · gusts 38'}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-key">Rain chance</div>
+          <div className="stat-val">{live?.chanceOfRain ?? 86}<span className="u">%</span></div>
+          <div className="stat-trend">next hour</div>
+        </div>
       </div>
     </section>
   )

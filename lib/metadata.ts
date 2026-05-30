@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getDistrictById } from './geo'
+import type { WeatherData } from './weather-service'
 
 export const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://keralarain.com'
 
@@ -67,22 +68,68 @@ export const BASE_METADATA: Metadata = {
   },
 }
 
-// Generate district-specific metadata for future dynamic routes
+// District-specific metadata — title format matches SEO requirement
 export function getDistrictMetadata(districtId: string): Partial<Metadata> {
   const district = getDistrictById(districtId)
   const name = district?.name ?? 'Kerala'
+  const title = `Live Rain & Weather in ${name} | KeralaRain`
 
   return {
-    title: `Rain in ${name} Today`,
-    description: `Live rain updates, weather forecasts, humidity and monsoon alerts for ${name} district, Kerala. Real-time data updated every 15 minutes.`,
+    title,
+    description: `Real-time rainfall, hourly forecast and weather conditions for ${name} district, Kerala. Updated every 10 minutes from WeatherAPI and IMD.`,
+    keywords: [
+      `${name} rain today`, `${name} weather`, `${name} rainfall`, `${name} monsoon`,
+      'Kerala rain', 'Kerala weather', 'Kerala monsoon tracker',
+    ],
     openGraph: {
-      title: `${name} Rain Today — KeralaRain`,
-      description: `Live monsoon tracker for ${name}. Current rainfall, hourly forecasts and district alerts.`,
-      url: `${BASE_URL}/?district=${districtId}`,
+      title,
+      description: `Live monsoon tracker for ${name}. Current rainfall, temperature, humidity and hourly forecast.`,
+      url: `${BASE_URL}/districts/${districtId}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: `Live rain & weather for ${name}, Kerala.`,
     },
     alternates: {
-      canonical: `${BASE_URL}/?district=${districtId}`,
+      canonical: `${BASE_URL}/districts/${districtId}`,
     },
+  }
+}
+
+// Weather observation schema for district pages (Schema.org)
+export function generateWeatherSchema(weather: WeatherData, districtName: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Observation',
+    name: `Weather in ${districtName}, Kerala`,
+    description: `Current weather conditions for ${districtName} district, Kerala, India`,
+    observationDate: weather.current.lastUpdated,
+    value: {
+      '@type': 'QuantitativeValue',
+      value: weather.current.precipMm,
+      unitCode: 'MMT',
+      name: 'Rainfall (mm/hr)',
+    },
+    measuredProperty: {
+      '@type': 'Property',
+      name: 'Rainfall rate',
+    },
+    featureOfInterest: {
+      '@type': 'Place',
+      name: `${districtName}, Kerala, India`,
+      geo: {
+        '@type': 'GeoShape',
+        box: '8.2765 74.8944 12.7958 77.2195',
+      },
+    },
+    additionalProperty: [
+      { '@type': 'PropertyValue', name: 'Temperature',  value: `${Math.round(weather.current.tempC)}°C` },
+      { '@type': 'PropertyValue', name: 'Humidity',     value: `${weather.current.humidity}%` },
+      { '@type': 'PropertyValue', name: 'Wind Speed',   value: `${Math.round(weather.current.windKph)} km/h` },
+      { '@type': 'PropertyValue', name: 'Condition',    value: weather.current.condition },
+      { '@type': 'PropertyValue', name: 'Data Source',  value: weather.source === 'weatherapi' ? 'WeatherAPI.com' : 'OpenWeatherMap' },
+    ],
   }
 }
 

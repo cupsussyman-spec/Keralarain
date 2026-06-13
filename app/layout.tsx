@@ -22,7 +22,7 @@ const _instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   ...BASE_METADATA,
-  ...(GSC_TOKEN ? { verification: { google: GSC_TOKEN } } : {}),
+  verification: { google: GSC_TOKEN ?? 'a8e217d5e6715198' },
 }
 
 export const viewport: Viewport = {

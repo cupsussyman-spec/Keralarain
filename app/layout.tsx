@@ -22,7 +22,9 @@ const _instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   ...BASE_METADATA,
-  ...(GSC_TOKEN ? { verification: { google: GSC_TOKEN } } : {}),
+  verification: {
+    google: GSC_TOKEN ?? 'S0e8z6iZla707J9I04S7Plvb4EQUwRW8zcpcwhSpwGQ',
+  },
 }
 
 export const viewport: Viewport = {
@@ -40,7 +42,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-IN" suppressHydrationWarning>
       <head>
-        <meta name="google-site-verification" content="S0e8z6iZla707J9I04S7Plvb4EQUwRW8zcpcwhSpwGQ" />
         {/* Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
